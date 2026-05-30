@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SAMSTORE V2 - Level 1</title>
+<style>
+* {margin:0; padding:0; box-sizing:border-box; font-family:Segoe UI}
+body {background:#0f172a; color:#e2e8f0; padding:15px}
+.card {background:#1e293b; padding:15px; border-radius:12px; margin-bottom:12px}
+input, button, textarea {width:100%; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#e2e8f0}
+button {background:#3b82f6; border:none; cursor:pointer; font-weight:bold}
+button:hover {background:#2563eb}
+.btn-danger {background:#ef4444}
+h2 {color:#3b82f6; margin-bottom:10px}
+.product {border:1px solid #334155; padding:12px; border-radius:8px; margin-bottom:10px}
+.price {color:#22c55e; font-size:18px; font-weight:bold; margin:8px 0}
+table {width:100%; font-size:12px; margin-top:10px}
+th, td {padding:6px; border-bottom:1px solid #334155; text-align:left}
+.hidden {display:none}
+.tabs button {width:49%}
+</style>
+</head>
+<body>
+
+<h2>SAMSTORE V2 🚀</h2>
+
+<div class="tabs">
+<button onclick="showTab('toko')">Toko</button>
+<button onclick="showTab('admin')">Admin</button>
+</div>
+
+<!-- TAB TOKO BUAT BUYER -->
+<div id="toko">
+<div class="card">
+<b>📝 Cara Pembelian:</b><br>
+1. Pilih produk > Klik Beli<br>
+2. Masukkan WA 6285545210076<br>
+3. Transfer + Kirim bukti ke WA admin
+</div>
+<div id="listProduk"></div>
+</div>
+
+<!-- TAB ADMIN BUAT LO -->
+<div id="admin" class="hidden">
+<input id="pass" type="password" placeholder="Password Admin: hisyamganteng">
+<button onclick="login()">Login Admin</button>
+
+<div id="panelAdmin" class="hidden">
+<h2>Tambah Produk</h2>
+<input id="nama" placeholder="Nama Produk">
+<input id="harga" type="number" placeholder="Harga">
+<textarea id="desc" placeholder="Deskripsi"></textarea>
+<button onclick="addProduk()">Simpan</button>
+
+<h2 style="margin-top:20px">Daftar Produk</h2>
+<div id="listAdmin"></div>
+
+<h2 style="margin-top:20px">Pesanan Masuk</h2>
+<table id="tabelPesanan"><tr><th>WA</th><th>Produk</th><th>Total</th><th>Waktu</th></tr></table>
+</div>
+</div>
+
+<script>
+let produk = JSON.parse(localStorage.getItem('produk')) || [
+  {id:1, nama:'AM Premium 1 Tahun', harga:5000, desc:'Akses semua fitur premium 12 bulan'},
+  {id:2, nama:'CapCut Pro 7 Hari', harga:8000, desc:'Tanpa watermark + template AI'}
+];
+let pesanan = JSON.parse(localStorage.getItem('pesanan')) || [];
+
+function showTab(tab) {
+  document.getElementById('toko').classList.toggle('hidden', tab!='toko');
+  document.getElementById('admin').classList.toggle('hidden', tab!='admin');
+  if(tab=='admin') loadAdmin();
+  loadProduk();
+}
+
+function login() {
+  if(document.getElementById('pass').value == 'hisyamwebv1') {
+    document.getElementById('panelAdmin').classList.remove('hidden');
+    loadAdmin();
+  } else alert('Password salah! Default: hisyamganteng');
+}
+
+function loadProduk() {
+  document.getElementById('listProduk').innerHTML = produk.map(p => `
+    <div class="product">
+      <h3>${p.nama}</h3>
+      <p>${p.desc}</p>
+      <div class="price">Rp ${p.harga.toLocaleString()}</div>
+      <button onclick="beli(${p.id})">Beli Sekarang</button>
+    </div>
+  `).join('');
+}
+
+function beli(id) {
+  let p = produk.find(x=>x.id==id);
+  let wa = prompt('Masukin nomor WA 62xxxxxxxx:');
+  if(!wa) return;
+  
+  pesanan.push({wa, nama:p.nama, total:p.harga, waktu:new Date().toLocaleString()});
+  localStorage.setItem('pesanan', JSON.stringify(pesanan));
+  
+  alert(`Order dibuat!\\nProduk: ${p.nama}\\nTotal: Rp ${p.harga}\\n\\nTransfer ke DANA 085545210076\\nLalu kirim bukti ke WA admin`);
+}
+
+function addProduk() {
+  let nama = document.getElementById('nama').value;
+  let harga = document.getElementById('harga').value;
+  let desc = document.getElementById('desc').value;
+  if(!nama || !harga) return alert('Isi semua!');
+  
+  produk.push({id:Date.now(), nama, harga:parseInt(harga), desc});
+  localStorage.setItem('produk', JSON.stringify(produk));
+  
+  document.getElementById('nama').value = '';
+  document.getElementById('harga').value = '';
+  document.getElementById('desc').value = '';
+  alert('Produk ditambah!');
+  loadAdmin();
+}
+
+function hapusProduk(id) {
+  produk = produk.filter(p=>p.id!=id);
+  localStorage.setItem('produk', JSON.stringify(produk));
+  loadAdmin();
+}
+
+function loadAdmin() {
+  document.getElementById('listAdmin').innerHTML = produk.map(p => `
+    <div class="card">
+      ${p.nama} - Rp ${p.harga.toLocaleString()}
+      <button class="btn-danger" onclick="hapusProduk(${p.id})">Hapus</button>
+    </div>
+  `).join('');
+  
+  document.getElementById('tabelPesanan').innerHTML = 
+    '<tr><th>WA</th><th>Produk</th><th>Total</th><th>Waktu</th></tr>' +
+    pesanan.map(p => `<tr><td>${p.wa}</td><td>${p.nama}</td><td>Rp ${p.total}</td><td>${p.waktu}</td></tr>`).join('');
+}
+
+loadProduk();
+</script>
+</body>
+</html>
